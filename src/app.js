@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, '..', 'Frontend')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/api/health', (req, res) => {
   sendResponse(res, 200, true, { status: 'ok' }, 'Server is healthy');
@@ -30,14 +30,9 @@ app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
-// API 404 handler
-app.all('/api/{*splat}', (req, res, next) => {
+// Any request that didn't match a route above
+app.all('/{*splat}', (req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));
-});
-
-// SPA catch-all: serve index.html for any non-API route
-app.get('/{*splat}', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'Frontend', 'index.html'));
 });
 
 app.use(errorHandler); // must be last
