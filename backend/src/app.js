@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, '..', '..', 'Frontend')));
 
 app.get('/api/health', (req, res) => {
   sendResponse(res, 200, true, { status: 'ok' }, 'Server is healthy');
