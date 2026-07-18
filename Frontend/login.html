@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Log in to EventSphere to manage your events and registrations.">
+  <title>Log In – EventSphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <main class="auth-page">
+      <div class="auth-card" id="login-card">
+        <div class="text-center mb-lg">
+          <a href="/" class="navbar-brand" style="justify-content:center; margin-bottom:var(--space-lg);" id="login-brand">
+            <div class="brand-icon">⚡</div>
+            EventSphere
+          </a>
+          <h2>Welcome Back</h2>
+          <p class="auth-subtitle">Sign in to your account</p>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email</label>
+            <input class="form-input" type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input class="form-input" type="password" id="login-password" placeholder="••••••••" required minlength="6" autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit">
+            Sign In
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          Don't have an account? <a href="/signup.html" id="login-to-signup">Sign Up</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (Auth.isLoggedIn()) window.location.href = '/dashboard.html';
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-submit');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const res = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value,
+          }),
+        });
+
+        Auth.save(res.data);
+        showToast('Login successful!', 'success');
+        setTimeout(() => window.location.href = '/dashboard.html', 500);
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+  </script>
+</body>
+</html>

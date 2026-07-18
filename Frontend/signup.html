@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create your EventSphere account to discover and manage community events.">
+  <title>Sign Up – EventSphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <main class="auth-page">
+      <div class="auth-card" id="signup-card">
+        <div class="text-center mb-lg">
+          <a href="/" class="navbar-brand" style="justify-content:center; margin-bottom:var(--space-lg);" id="signup-brand">
+            <div class="brand-icon">⚡</div>
+            EventSphere
+          </a>
+          <h2>Create Account</h2>
+          <p class="auth-subtitle">Join the community</p>
+        </div>
+
+        <form id="signup-form" onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label class="form-label" for="signup-name">Full Name</label>
+            <input class="form-input" type="text" id="signup-name" placeholder="John Doe" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-email">Email</label>
+            <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <input class="form-input" type="password" id="signup-password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-role">I want to</label>
+            <select class="form-select" id="signup-role">
+              <option value="participant">Attend Events (Participant)</option>
+              <option value="organizer">Organize Events (Organizer)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-submit">
+            Create Account
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          Already have an account? <a href="/login.html" id="signup-to-login">Log In</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (Auth.isLoggedIn()) window.location.href = '/dashboard.html';
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      const btn = document.getElementById('signup-submit');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const res = await api('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: document.getElementById('signup-name').value,
+            email: document.getElementById('signup-email').value,
+            password: document.getElementById('signup-password').value,
+            role: document.getElementById('signup-role').value,
+          }),
+        });
+
+        Auth.save(res.data);
+        showToast('Account created successfully!', 'success');
+        setTimeout(() => window.location.href = '/dashboard.html', 500);
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+  </script>
+</body>
+</html>

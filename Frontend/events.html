@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse all community events on EventSphere. Filter by category and status.">
+  <title>Events – EventSphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <main class="main-content">
+      <div class="container">
+        <div class="section-header">
+          <h1 class="section-title">Explore Events</h1>
+          <div class="flex gap-sm" id="events-header-actions">
+            <!-- Create button for organizers -->
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar" id="filters-bar">
+          <button class="filter-chip active" data-status="published" onclick="filterByStatus('published', this)" id="filter-published">Published</button>
+          <button class="filter-chip" data-status="" onclick="filterByStatus('', this)" id="filter-all">All</button>
+          <button class="filter-chip" data-status="draft" onclick="filterByStatus('draft', this)" id="filter-draft">Draft</button>
+          <button class="filter-chip" data-status="completed" onclick="filterByStatus('completed', this)" id="filter-completed">Completed</button>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="grid grid-3" id="events-grid">
+          <div class="loading-center" style="grid-column:1/-1;"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('events'));
+    initNavbar();
+
+    if (Auth.isOrganizer()) {
+      document.getElementById('events-header-actions').innerHTML =
+        '<a href="/create-event.html" class="btn btn-primary btn-sm" id="events-create-btn">+ Create Event</a>';
+    }
+
+    let currentPage = 1;
+    let currentStatus = 'published';
+
+    async function loadEvents(page = 1, status = currentStatus) {
+      currentPage = page;
+      currentStatus = status;
+      const grid = document.getElementById('events-grid');
+      grid.innerHTML = '<div class="loading-center" style="grid-column:1/-1;"><div class="spinner"></div></div>';
+
+      try {
+        const statusParam = status ? `&status=${status}` : '';
+        const res = await api(`/events?page=${page}&limit=9${statusParam}`);
+        const { events, total, pages } = res.data;
+
+        if (events.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-state-icon">🔍</div>
+              <div class="empty-state-title">No events found</div>
+              <div class="empty-state-text">Try a different filter or create a new event.</div>
+            </div>
+          `;
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+
+        grid.innerHTML = events.map((e, i) => renderEventCard(e, i)).join('');
+
+        // Pagination
+        if (pages > 1) {
+          let paginationHTML = '';
+          for (let i = 1; i <= pages; i++) {
+            paginationHTML += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadEvents(${i})" id="page-${i}">${i}</button>`;
+          }
+          document.getElementById('pagination').innerHTML = paginationHTML;
+        } else {
+          document.getElementById('pagination').innerHTML = '';
+        }
+      } catch (err) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">⚠️</div>
+          <div class="empty-state-title">Failed to load events</div>
+          <div class="empty-state-text">${err.message}</div>
+        </div>`;
+      }
+    }
+
+    function filterByStatus(status, el) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      loadEvents(1, status);
+    }
+
+    loadEvents();
+  </script>
+</body>
+</html>

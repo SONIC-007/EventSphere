@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EventSphere – Discover, create, and manage community events effortlessly. Join vibrant communities and attend events that matter.">
+  <title>EventSphere – Community Event Management Platform</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <!-- Navbar injected by JS -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Hero -->
+        <section class="hero" id="hero-section">
+          <h1 class="hero-title">Discover Events<br>That Inspire</h1>
+          <p class="hero-subtitle">
+            Create, manage, and attend community events seamlessly. Connect with like-minded people and make every moment count.
+          </p>
+          <div class="hero-actions" id="hero-actions">
+            <a href="/events.html" class="btn btn-primary btn-lg" id="hero-browse">Browse Events</a>
+            <a href="/signup.html" class="btn btn-secondary btn-lg" id="hero-signup">Get Started Free</a>
+          </div>
+          <div class="stats-row" id="stats-row">
+            <div class="stat-item">
+              <div class="stat-number" id="stat-events">0</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="stat-orgs">0</div>
+              <div class="stat-label">Organizations</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="stat-capacity">∞</div>
+              <div class="stat-label">Community Members</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Features -->
+        <section style="padding: var(--space-3xl) 0;" id="features-section">
+          <h2 class="section-title text-center mb-lg">Why EventSphere?</h2>
+          <div class="grid grid-3" id="features-grid">
+            <div class="card" id="feature-discover" style="text-align:center;">
+              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🔍</div>
+              <h4>Discover Events</h4>
+              <p class="mt-sm" style="font-size:0.9rem;">Browse and find events that match your interests. Filter by category, date, and location.</p>
+            </div>
+            <div class="card" id="feature-organize" style="text-align:center;">
+              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🎯</div>
+              <h4>Organize Seamlessly</h4>
+              <p class="mt-sm" style="font-size:0.9rem;">Create events, manage registrations, track attendance, and collect feedback all in one place.</p>
+            </div>
+            <div class="card" id="feature-connect" style="text-align:center;">
+              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🤝</div>
+              <h4>Build Community</h4>
+              <p class="mt-sm" style="font-size:0.9rem;">Connect with organizations and communities. Engage through events and grow together.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Upcoming Events Preview -->
+        <section style="padding: var(--space-2xl) 0;" id="upcoming-section">
+          <div class="section-header">
+            <h2 class="section-title">Upcoming Events</h2>
+            <a href="/events.html" class="btn btn-ghost" id="view-all-events">View All →</a>
+          </div>
+          <div class="grid grid-3" id="upcoming-events">
+            <div class="loading-center"><div class="spinner"></div></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer style="border-top: 1px solid var(--border-light); padding: var(--space-xl) 0; text-align:center;">
+      <div class="container">
+        <p style="color: var(--text-muted); font-size:0.85rem;">
+          © 2026 EventSphere. Built with ❤️ for the community.
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Insert navbar
+    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('home'));
+    initNavbar();
+
+    // Update hero for logged-in users
+    if (Auth.isLoggedIn()) {
+      const user = Auth.getUser();
+      document.getElementById('hero-actions').innerHTML = `
+        <a href="/events.html" class="btn btn-primary btn-lg" id="hero-browse-auth">Browse Events</a>
+        ${Auth.isOrganizer() ? '<a href="/create-event.html" class="btn btn-secondary btn-lg" id="hero-create">Create Event</a>' : ''}
+      `;
+    }
+
+    // Load stats & upcoming events
+    async function loadHomePage() {
+      try {
+        const [eventsRes, orgsRes] = await Promise.all([
+          api('/events?status=published&limit=6'),
+          api('/organizations'),
+        ]);
+
+        // Stats
+        document.getElementById('stat-events').textContent = eventsRes.data.total || 0;
+        document.getElementById('stat-orgs').textContent = eventsRes.data.events?.length > 0 
+          ? orgsRes.data.orgs?.length || 0 
+          : 0;
+
+        // Upcoming events
+        const container = document.getElementById('upcoming-events');
+        if (eventsRes.data.events?.length > 0) {
+          container.innerHTML = eventsRes.data.events
+            .slice(0, 3)
+            .map((e, i) => renderEventCard(e, i))
+            .join('');
+        } else {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <div class="empty-state-icon">🎉</div>
+              <div class="empty-state-title">No events yet</div>
+              <div class="empty-state-text">Be the first to create an event!</div>
+              <a href="/create-event.html" class="btn btn-primary mt-lg">Create Event</a>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadHomePage();
+  </script>
+</body>
+</html>

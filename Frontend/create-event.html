@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create a new event on EventSphere.">
+  <title>Create Event – EventSphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <main class="main-content">
+      <div class="container" style="max-width: 720px;">
+        <div class="section-header">
+          <h1 class="section-title">Create Event</h1>
+        </div>
+
+        <div class="card" id="create-event-card">
+          <form id="create-event-form" onsubmit="handleCreateEvent(event)">
+            <div class="form-group">
+              <label class="form-label" for="event-title">Event Title *</label>
+              <input class="form-input" type="text" id="event-title" placeholder="e.g. Tech Meetup 2026" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="event-description">Description</label>
+              <textarea class="form-textarea" id="event-description" placeholder="Describe your event..." rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="event-category">Category</label>
+              <select class="form-select" id="event-category">
+                <option value="">Select category</option>
+                <option value="Technology">Technology</option>
+                <option value="Business">Business</option>
+                <option value="Music">Music</option>
+                <option value="Sports">Sports</option>
+                <option value="Art">Art</option>
+                <option value="Education">Education</option>
+                <option value="Health">Health</option>
+                <option value="Social">Social</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="event-org">Organization *</label>
+              <select class="form-select" id="event-org" required>
+                <option value="">Loading organizations...</option>
+              </select>
+              <div style="margin-top:var(--space-sm);">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="showNewOrgForm()" id="btn-new-org">+ Create New Organization</button>
+              </div>
+            </div>
+
+            <!-- Inline Org Creation -->
+            <div class="hidden" id="new-org-form" style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-lg); border:1px solid var(--border-color);">
+              <h4 class="mb-md">New Organization</h4>
+              <div class="form-group">
+                <label class="form-label" for="new-org-name">Organization Name *</label>
+                <input class="form-input" type="text" id="new-org-name" placeholder="e.g. Tech Community">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-org-desc">Description</label>
+                <input class="form-input" type="text" id="new-org-desc" placeholder="Brief description">
+              </div>
+              <div class="flex gap-sm">
+                <button type="button" class="btn btn-primary btn-sm" onclick="createOrg()" id="btn-save-org">Save Organization</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="hideNewOrgForm()" id="btn-cancel-org">Cancel</button>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg);">
+              <div class="form-group">
+                <label class="form-label" for="event-date">Event Date *</label>
+                <input class="form-input" type="datetime-local" id="event-date" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="event-deadline">Registration Deadline *</label>
+                <input class="form-input" type="datetime-local" id="event-deadline" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:var(--space-lg);">
+              <div class="form-group">
+                <label class="form-label" for="event-venue">Venue *</label>
+                <input class="form-input" type="text" id="event-venue" placeholder="e.g. Mumbai Convention Center" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="event-capacity">Capacity *</label>
+                <input class="form-input" type="number" id="event-capacity" min="1" placeholder="100" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="event-status">Initial Status</label>
+              <select class="form-select" id="event-status">
+                <option value="draft">Draft (publish later)</option>
+                <option value="published">Published (visible immediately)</option>
+              </select>
+            </div>
+
+            <div class="flex gap-md mt-lg">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-create-event">Create Event</button>
+              <a href="/events.html" class="btn btn-ghost btn-lg" id="btn-back-events">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) { /* redirects */ }
+    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('create'));
+    initNavbar();
+
+    // Load organizations
+    async function loadOrgs() {
+      try {
+        const res = await api('/organizations');
+        const orgs = res.data.orgs || [];
+        const select = document.getElementById('event-org');
+        if (orgs.length === 0) {
+          select.innerHTML = '<option value="">No organizations – create one below</option>';
+        } else {
+          select.innerHTML = '<option value="">Select organization</option>' +
+            orgs.map(o => `<option value="${o._id}">${o.name}</option>`).join('');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function showNewOrgForm() {
+      document.getElementById('new-org-form').classList.remove('hidden');
+    }
+    function hideNewOrgForm() {
+      document.getElementById('new-org-form').classList.add('hidden');
+    }
+
+    async function createOrg() {
+      const name = document.getElementById('new-org-name').value.trim();
+      if (!name) { showToast('Organization name is required', 'error'); return; }
+
+      try {
+        const res = await api('/organizations', {
+          method: 'POST',
+          body: JSON.stringify({
+            name,
+            description: document.getElementById('new-org-desc').value,
+          }),
+        });
+        showToast('Organization created!', 'success');
+        hideNewOrgForm();
+        await loadOrgs();
+        // Auto-select the new org
+        document.getElementById('event-org').value = res.data.org._id;
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function handleCreateEvent(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-create-event');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        const data = {
+          title: document.getElementById('event-title').value,
+          description: document.getElementById('event-description').value,
+          category: document.getElementById('event-category').value,
+          orgId: document.getElementById('event-org').value,
+          date: new Date(document.getElementById('event-date').value).toISOString(),
+          registrationDeadline: new Date(document.getElementById('event-deadline').value).toISOString(),
+          venue: document.getElementById('event-venue').value,
+          capacity: parseInt(document.getElementById('event-capacity').value),
+          status: document.getElementById('event-status').value,
+        };
+
+        if (!data.orgId) {
+          showToast('Please select an organization', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Create Event';
+          return;
+        }
+
+        const res = await api('/events', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+
+        showToast('Event created successfully!', 'success');
+        setTimeout(() => window.location.href = `/event.html?id=${res.data.event._id}`, 500);
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Event';
+      }
+    }
+
+    loadOrgs();
+  </script>
+</body>
+</html>

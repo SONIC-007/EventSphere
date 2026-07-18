@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your EventSphere dashboard – manage events, view registrations, and track activity.">
+  <title>Dashboard – EventSphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="app">
+    <main class="main-content">
+      <div class="container">
+        <!-- Welcome Header -->
+        <div class="section-header" id="dashboard-header">
+          <div>
+            <h1 class="section-title" id="welcome-text">Dashboard</h1>
+            <p style="color:var(--text-muted); margin-top:var(--space-xs);" id="welcome-subtitle"></p>
+          </div>
+          <div id="dash-actions"></div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="dashboard-stats" id="dash-stats">
+          <div class="dash-stat-card" id="stat-card-events">
+            <div class="dash-stat-icon" style="background:rgba(108,99,255,0.15); color:var(--primary-light);">📅</div>
+            <div>
+              <div class="dash-stat-number" id="dash-my-events">-</div>
+              <div class="dash-stat-label">My Events</div>
+            </div>
+          </div>
+          <div class="dash-stat-card" id="stat-card-registrations">
+            <div class="dash-stat-icon" style="background:rgba(45,212,168,0.15); color:var(--success);">🎟️</div>
+            <div>
+              <div class="dash-stat-number" id="dash-my-regs">-</div>
+              <div class="dash-stat-label">Registrations</div>
+            </div>
+          </div>
+          <div class="dash-stat-card" id="stat-card-orgs">
+            <div class="dash-stat-icon" style="background:rgba(255,107,157,0.15); color:var(--accent);">🏢</div>
+            <div>
+              <div class="dash-stat-number" id="dash-my-orgs">-</div>
+              <div class="dash-stat-label">Organizations</div>
+            </div>
+          </div>
+          <div class="dash-stat-card" id="stat-card-upcoming">
+            <div class="dash-stat-icon" style="background:rgba(255,179,71,0.15); color:var(--warning);">⏰</div>
+            <div>
+              <div class="dash-stat-number" id="dash-upcoming">-</div>
+              <div class="dash-stat-label">Upcoming</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" id="dash-tabs">
+          <button class="tab active" onclick="switchTab('registrations', this)" id="tab-registrations">My Registrations</button>
+          <button class="tab" onclick="switchTab('my-events', this)" id="tab-my-events">My Events</button>
+          <button class="tab" onclick="switchTab('organizations', this)" id="tab-orgs">Organizations</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content">
+          <div class="loading-center"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) { /* redirects */ }
+    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('dashboard'));
+    initNavbar();
+
+    const user = Auth.getUser();
+    document.getElementById('welcome-text').textContent = `Welcome, ${user.name}!`;
+    document.getElementById('welcome-subtitle').textContent = `Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
+
+    if (Auth.isOrganizer()) {
+      document.getElementById('dash-actions').innerHTML =
+        '<a href="/create-event.html" class="btn btn-primary" id="dash-create-event">+ Create Event</a>';
+    }
+
+    let myRegistrations = [];
+    let myEvents = [];
+    let myOrgs = [];
+
+    async function loadDashboard() {
+      try {
+        // Load registrations
+        const regsRes = await api('/registrations/me');
+        myRegistrations = regsRes.data.registrations || [];
+        document.getElementById('dash-my-regs').textContent = myRegistrations.filter(r => r.status !== 'cancelled').length;
+
+        const upcoming = myRegistrations.filter(r => {
+          const eventDate = r.eventId?.date || '';
+          return new Date(eventDate) > new Date() && r.status !== 'cancelled';
+        }).length;
+        document.getElementById('dash-upcoming').textContent = upcoming;
+
+        // Load orgs
+        const orgsRes = await api('/organizations');
+        myOrgs = orgsRes.data.orgs || [];
+        document.getElementById('dash-my-orgs').textContent = myOrgs.length;
+
+        // Load events (all statuses for organizers)
+        if (Auth.isOrganizer()) {
+          try {
+            const drafts = await api('/events?status=draft&limit=50');
+            const published = await api('/events?status=published&limit=50');
+            const completed = await api('/events?status=completed&limit=50');
+            myEvents = [
+              ...(drafts.data.events || []),
+              ...(published.data.events || []),
+              ...(completed.data.events || []),
+            ].filter(e => String(e.createdBy) === user.id || String(e.createdBy?._id) === user.id);
+          } catch { myEvents = []; }
+        }
+        document.getElementById('dash-my-events').textContent = myEvents.length;
+
+        // Show default tab
+        switchTab('registrations', document.getElementById('tab-registrations'));
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function switchTab(tab, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+
+      const content = document.getElementById('tab-content');
+
+      if (tab === 'registrations') {
+        if (myRegistrations.length === 0) {
+          content.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">🎟️</div>
+              <div class="empty-state-title">No registrations yet</div>
+              <div class="empty-state-text">Browse events and register to get started!</div>
+              <a href="/events.html" class="btn btn-primary mt-lg" id="dash-browse-events">Browse Events</a>
+            </div>
+          `;
+          return;
+        }
+
+        content.innerHTML = `
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Registered On</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${myRegistrations.map(r => {
+                  const event = r.eventId || {};
+                  return `
+                    <tr>
+                      <td>
+                        <a href="/event.html?id=${event._id || ''}" style="font-weight:600;">${event.title || 'Unknown Event'}</a>
+                      </td>
+                      <td>${event.date ? formatDate(event.date) : '-'}</td>
+                      <td>${statusBadge(r.status)}</td>
+                      <td>${formatDate(r.createdAt)}</td>
+                      <td>
+                        ${r.status === 'registered' || r.status === 'waitlisted' ?
+                          `<button class="btn btn-ghost btn-sm" onclick="cancelFromDash('${event._id}')">Cancel</button>` : '-'
+                        }
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      else if (tab === 'my-events') {
+        if (myEvents.length === 0) {
+          content.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📅</div>
+              <div class="empty-state-title">${Auth.isOrganizer() ? 'No events created yet' : 'Only organizers can create events'}</div>
+              ${Auth.isOrganizer() ? '<a href="/create-event.html" class="btn btn-primary mt-lg">Create Event</a>' : ''}
+            </div>
+          `;
+          return;
+        }
+
+        content.innerHTML = `
+          <div class="grid grid-3">
+            ${myEvents.map((e, i) => renderEventCard(e, i)).join('')}
+          </div>
+        `;
+      }
+
+      else if (tab === 'organizations') {
+        if (myOrgs.length === 0) {
+          content.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">🏢</div>
+              <div class="empty-state-title">No organizations</div>
+              <div class="empty-state-text">Organizations will appear here.</div>
+            </div>
+          `;
+          return;
+        }
+
+        content.innerHTML = `
+          <div class="grid grid-3">
+            ${myOrgs.map((o, i) => `
+              <div class="card" id="org-card-${o._id}">
+                <div class="flex gap-md" style="align-items:center; margin-bottom:var(--space-md);">
+                  <div class="dash-stat-icon" style="background:${getGradient(i)}; color:white; border-radius:var(--radius-md); font-size:1.2rem; width:48px; height:48px;">
+                    🏢
+                  </div>
+                  <div>
+                    <h4>${o.name}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">Created ${formatDate(o.createdAt)}</p>
+                  </div>
+                </div>
+                <p style="font-size:0.9rem;">${o.description || 'No description'}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    async function cancelFromDash(eventId) {
+      if (!confirm('Cancel your registration?')) return;
+      try {
+        await api(`/registrations/${eventId}/cancel`, { method: 'PATCH' });
+        showToast('Registration cancelled', 'info');
+        loadDashboard();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
