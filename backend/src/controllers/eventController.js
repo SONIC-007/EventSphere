@@ -12,6 +12,11 @@ const getEvents = catchAsync(async (req, res) => {
   sendResponse(res, 200, true, result, 'Events fetched');
 });
 
+const getEventStats = catchAsync(async (req, res) => {
+  const stats = await eventService.getEventStats();
+  sendResponse(res, 200, true, stats, 'Event stats fetched');
+});
+
 const getEventById = catchAsync(async (req, res) => {
   const event = await eventService.getEventById(req.params.id);
   sendResponse(res, 200, true, { event }, 'Event fetched');
@@ -27,4 +32,5 @@ const deleteEvent = catchAsync(async (req, res) => {
   sendResponse(res, 200, true, null, 'Event deleted');
 });
 
-module.exports = { createEvent, getEvents, getEventById, updateEvent, deleteEvent };
+module.exports = { createEvent, getEvents, getEventStats, getEventById, updateEvent, deleteEvent };
+

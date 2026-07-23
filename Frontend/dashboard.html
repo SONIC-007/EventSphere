@@ -3,194 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Your EventSphere dashboard – manage events, view registrations, and track activity.">
+  <meta name="description" content="Your EventSphere Enterprise Dashboard – Manage events, registrations, and organizations.">
   <title>Dashboard – EventSphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <div class="page-wrapper" id="app">
-    <main class="main-content">
-      <div class="container">
-        <!-- Welcome Header -->
-        <div class="section-header" id="dashboard-header">
-          <div>
-            <h1 class="section-title" id="welcome-text">Dashboard</h1>
-            <p style="color:var(--text-muted); margin-top:var(--space-xs);" id="welcome-subtitle"></p>
-          </div>
-          <div id="dash-actions"></div>
-        </div>
+    <!-- Navbar -->
+    <div id="navbar-placeholder"></div>
 
-        <!-- Stats Cards -->
-        <div class="dashboard-stats" id="dash-stats">
-          <div class="dash-stat-card" id="stat-card-events">
-            <div class="dash-stat-icon" style="background:rgba(108,99,255,0.15); color:var(--primary-light);">📅</div>
-            <div>
-              <div class="dash-stat-number" id="dash-my-events">-</div>
-              <div class="dash-stat-label">My Events</div>
-            </div>
-          </div>
-          <div class="dash-stat-card" id="stat-card-registrations">
-            <div class="dash-stat-icon" style="background:rgba(45,212,168,0.15); color:var(--success);">🎟️</div>
-            <div>
-              <div class="dash-stat-number" id="dash-my-regs">-</div>
-              <div class="dash-stat-label">Registrations</div>
-            </div>
-          </div>
-          <div class="dash-stat-card" id="stat-card-orgs">
-            <div class="dash-stat-icon" style="background:rgba(255,107,157,0.15); color:var(--accent);">🏢</div>
-            <div>
-              <div class="dash-stat-number" id="dash-my-orgs">-</div>
-              <div class="dash-stat-label">Organizations</div>
-            </div>
-          </div>
-          <div class="dash-stat-card" id="stat-card-upcoming">
-            <div class="dash-stat-icon" style="background:rgba(255,179,71,0.15); color:var(--warning);">⏰</div>
-            <div>
-              <div class="dash-stat-number" id="dash-upcoming">-</div>
-              <div class="dash-stat-label">Upcoming</div>
-            </div>
-          </div>
+    <div class="dashboard-layout">
+      <aside class="dashboard-sidebar">
+        <div style="padding: 0 0.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+          <div class="hero-kicker" style="color:var(--ink); border-color:var(--border); background:var(--slate-fill); margin-bottom:0.75rem;">Workspace</div>
+          <h3 style="font-size: 1rem; color: var(--ink);">Dashboard</h3>
+          <p id="dash-role-copy" style="font-size:0.85rem; color:var(--text-muted); margin-top:0.35rem;">Role aware tools and records.</p>
         </div>
+        <ul class="sidebar-menu" id="dashboard-menu">
+          <li class="sidebar-menu-item active" data-tab="overview" onclick="switchTab('overview', this)" id="side-overview">
+            <span class="material-symbols-outlined">space_dashboard</span> Overview
+          </li>
+        </ul>
+      </aside>
 
-        <!-- Tabs -->
-        <div class="tabs" id="dash-tabs">
-          <button class="tab active" onclick="switchTab('registrations', this)" id="tab-registrations">My Registrations</button>
-          <button class="tab" onclick="switchTab('my-events', this)" id="tab-my-events">My Events</button>
-          <button class="tab" onclick="switchTab('organizations', this)" id="tab-orgs">Organizations</button>
-        </div>
+      <!-- Main Content Area -->
+      <main class="dashboard-main">
+        <div class="container" style="padding: 0;">
+          
+          <div class="card mb-xl" style="padding:1.5rem; background:linear-gradient(135deg, var(--ink), #22345a); color:#fff; border-color:transparent;">
+            <div class="flex items-start justify-between" style="gap:1rem; flex-wrap:wrap;">
+              <div>
+                <div class="hero-kicker" style="border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85);">After login</div>
+                <h1 id="welcome-title" style="font-size: 2.2rem; color:#fff; margin-top:0.75rem;">Event Dashboard</h1>
+                <p id="welcome-subtitle" style="color:rgba(255,255,255,0.78); margin-top:0.35rem;">Workspace overview</p>
+              </div>
+              <div id="dash-actions"></div>
+            </div>
+          </div>
 
-        <!-- Tab Content -->
-        <div id="tab-content">
-          <div class="loading-center"><div class="spinner"></div></div>
+          <div class="feature-grid mb-xl" id="dash-stats">
+            <div class="dash-stat-card stat-tile" id="stat-card-events">
+              <div>
+                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem;">Total Events</p>
+                <p class="dash-stat-number" id="dash-my-events">-</p>
+              </div>
+              <div class="dash-stat-icon" style="background:var(--slate-fill); color:var(--ink); margin-left:auto;">
+                <span class="material-symbols-outlined">event</span>
+              </div>
+            </div>
+
+            <div class="dash-stat-card stat-tile" id="stat-card-registrations">
+              <div>
+                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem;">Total Registrations</p>
+                <p class="dash-stat-number" id="dash-my-regs">-</p>
+              </div>
+              <div class="dash-stat-icon" style="background:var(--slate-fill); color:var(--moss); margin-left:auto;">
+                <span class="material-symbols-outlined">groups</span>
+              </div>
+            </div>
+
+            <div class="dash-stat-card stat-tile" id="stat-card-orgs">
+              <div>
+                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem;">Organizations</p>
+                <p class="dash-stat-number" id="dash-my-orgs">-</p>
+              </div>
+              <div class="dash-stat-icon" style="background:var(--slate-fill); color:var(--amber); margin-left:auto;">
+                <span class="material-symbols-outlined">business</span>
+              </div>
+            </div>
+
+            <div class="dash-stat-card stat-tile" id="stat-card-upcoming">
+              <div>
+                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.25rem;">Upcoming Events</p>
+                <p class="dash-stat-number" id="dash-upcoming">-</p>
+              </div>
+              <div class="dash-stat-icon" style="background:var(--slate-fill); color:var(--ink); margin-left:auto;">
+                <span class="material-symbols-outlined">schedule</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Tab Content Area -->
+          <div id="tab-content">
+            <div class="spinner-center"><div class="spinner"></div></div>
+          </div>
+
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
-    if (!requireAuth()) { /* redirects */ }
-    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('dashboard'));
+    if (!requireAuth()) { /* redirect */ }
+    document.getElementById('navbar-placeholder').innerHTML = renderNavbar('dashboard');
     initNavbar();
 
     const user = Auth.getUser();
-    document.getElementById('welcome-text').textContent = `Welcome, ${user.name}!`;
-    document.getElementById('welcome-subtitle').textContent = `Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
+    const isOrganizer = Auth.isOrganizer();
 
-    if (Auth.isOrganizer()) {
-      document.getElementById('dash-actions').innerHTML =
-        '<a href="/create-event.html" class="btn btn-primary" id="dash-create-event">+ Create Event</a>';
+    if (user) {
+      document.getElementById('welcome-title').textContent = `Welcome back, ${user.name}!`;
+      document.getElementById('welcome-subtitle').textContent = `Role: ${user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'} · live workspace`;
+      document.getElementById('dash-role-copy').textContent = isOrganizer
+        ? 'Create, publish, and track event operations.'
+        : 'Track registrations and follow published events.';
+    }
+
+    if (isOrganizer) {
+      document.getElementById('dash-actions').innerHTML = `
+        <a href="/create-event.html" class="btn btn-primary" id="dash-create-event">
+          <span class="material-symbols-outlined">add</span> Create Event
+        </a>
+      `;
     }
 
     let myRegistrations = [];
     let myEvents = [];
     let myOrgs = [];
 
+    function setSidebarMenu(items) {
+      const menu = document.getElementById('dashboard-menu');
+      menu.innerHTML = items.map(item => `
+        <li class="sidebar-menu-item ${item.active ? 'active' : ''}" data-tab="${item.tab}" onclick="switchTab('${item.tab}', this)" id="side-${item.tab}">
+          <span class="material-symbols-outlined">${item.icon}</span> ${item.label}
+        </li>
+      `).join('');
+    }
+
     async function loadDashboard() {
       try {
-        // Load registrations
+        // Load user registrations
         const regsRes = await api('/registrations/me');
         myRegistrations = regsRes.data.registrations || [];
         document.getElementById('dash-my-regs').textContent = myRegistrations.filter(r => r.status !== 'cancelled').length;
 
-        const upcoming = myRegistrations.filter(r => {
+        const upcomingCount = myRegistrations.filter(r => {
           const eventDate = r.eventId?.date || '';
           return new Date(eventDate) > new Date() && r.status !== 'cancelled';
         }).length;
-        document.getElementById('dash-upcoming').textContent = upcoming;
+        document.getElementById('dash-upcoming').textContent = upcomingCount;
 
-        // Load orgs
+        // Load organizations
         const orgsRes = await api('/organizations');
         myOrgs = orgsRes.data.orgs || [];
         document.getElementById('dash-my-orgs').textContent = myOrgs.length;
 
-        // Load events (all statuses for organizers)
-        if (Auth.isOrganizer()) {
+        // Load organizer created events
+        if (isOrganizer) {
           try {
-            const drafts = await api('/events?status=draft&limit=50');
-            const published = await api('/events?status=published&limit=50');
-            const completed = await api('/events?status=completed&limit=50');
+            const eventsRes = await api(`/events?createdBy=${user.id}&status=published&limit=50`);
+            const draftsRes = await api(`/events?createdBy=${user.id}&status=draft&limit=50`);
+            const completedRes = await api(`/events?createdBy=${user.id}&status=completed&limit=50`);
+            
             myEvents = [
-              ...(drafts.data.events || []),
-              ...(published.data.events || []),
-              ...(completed.data.events || []),
-            ].filter(e => String(e.createdBy) === user.id || String(e.createdBy?._id) === user.id);
-          } catch { myEvents = []; }
+              ...(eventsRes.data?.events || []),
+              ...(draftsRes.data?.events || []),
+              ...(completedRes.data?.events || [])
+            ];
+          } catch {
+            myEvents = [];
+          }
         }
         document.getElementById('dash-my-events').textContent = myEvents.length;
 
-        // Show default tab
-        switchTab('registrations', document.getElementById('tab-registrations'));
+        if (isOrganizer) {
+          setSidebarMenu([
+            { tab: 'overview', icon: 'space_dashboard', label: 'Overview', active: true },
+            { tab: 'registrations', icon: 'confirmation_number', label: 'Registrations', active: false },
+            { tab: 'my-events', icon: 'event', label: 'My Events', active: false },
+            { tab: 'organizations', icon: 'business', label: 'Organizations', active: false },
+          ]);
+        } else {
+          setSidebarMenu([
+            { tab: 'overview', icon: 'space_dashboard', label: 'Overview', active: true },
+            { tab: 'registrations', icon: 'confirmation_number', label: 'My Registrations', active: false },
+            { tab: 'recommendations', icon: 'explore', label: 'Recommended', active: false },
+            { tab: 'feedback', icon: 'reviews', label: 'Feedback', active: false },
+          ]);
+        }
+
+        // Render default tab
+        switchTab('overview', document.getElementById('side-overview'));
       } catch (err) {
         showToast(err.message, 'error');
       }
     }
 
     function switchTab(tab, el) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
+      document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+      if (el) el.classList.add('active');
 
       const content = document.getElementById('tab-content');
 
+      if (tab === 'overview') {
+        const overviewCards = isOrganizer ? `
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">event_available</span></div><h3>${myEvents.length}</h3><p>Events across draft, live, completed.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">groups</span></div><h3>${myRegistrations.length}</h3><p>Total participant registrations.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">business</span></div><h3>${myOrgs.length}</h3><p>Organizations attached to workspace.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">add_circle</span></div><h3>New event</h3><p>Open create flow from sidebar or top action.</p></div>
+          </div>
+        ` : `
+          <div class="feature-grid">
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">event_note</span></div><h3>${myRegistrations.length}</h3><p>Events you joined or waitlisted.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">schedule</span></div><h3>${document.getElementById('dash-upcoming').textContent}</h3><p>Upcoming commitments on your account.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">reviews</span></div><h3>Feedback</h3><p>Reviews you leave stay tied to event detail.</p></div>
+            <div class="feature-card"><div class="icon"><span class="material-symbols-outlined">explore</span></div><h3>Browse</h3><p>Go to published events for discovery.</p></div>
+          </div>
+        `;
+
+        content.innerHTML = overviewCards;
+        return;
+      }
+
       if (tab === 'registrations') {
         if (myRegistrations.length === 0) {
-          content.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">🎟️</div>
-              <div class="empty-state-title">No registrations yet</div>
-              <div class="empty-state-text">Browse events and register to get started!</div>
-              <a href="/events.html" class="btn btn-primary mt-lg" id="dash-browse-events">Browse Events</a>
-            </div>
-          `;
+          showEmpty('tab-content', 'confirmation_number', 'No event registrations yet', isOrganizer ? 'Open the events feed to register on behalf of your team.' : 'Browse events and register to participate.');
           return;
         }
 
         content.innerHTML = `
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Registered On</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${myRegistrations.map(r => {
-                  const event = r.eventId || {};
-                  return `
-                    <tr>
-                      <td>
-                        <a href="/event.html?id=${event._id || ''}" style="font-weight:600;">${event.title || 'Unknown Event'}</a>
-                      </td>
-                      <td>${event.date ? formatDate(event.date) : '-'}</td>
-                      <td>${statusBadge(r.status)}</td>
-                      <td>${formatDate(r.createdAt)}</td>
-                      <td>
-                        ${r.status === 'registered' || r.status === 'waitlisted' ?
-                          `<button class="btn btn-ghost btn-sm" onclick="cancelFromDash('${event._id}')">Cancel</button>` : '-'
-                        }
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
+          <div class="card mb-lg">
+            <h3 class="mb-md">My Event Registrations</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Registered Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${myRegistrations.map(r => {
+                    const event = r.eventId || {};
+                    return `
+                      <tr>
+                        <td>
+                          <a href="/event.html?id=${event._id || ''}" class="font-bold">${event.title || 'Event'}</a>
+                        </td>
+                        <td>${event.date ? formatDate(event.date) : '-'}</td>
+                        <td>${statusBadge(r.status)}</td>
+                        <td>${formatDate(r.createdAt)}</td>
+                        <td>
+                          ${r.status === 'registered' || r.status === 'waitlisted' ? `
+                            <button class="btn btn-ghost btn-sm" onclick="cancelFromDash('${event._id}')">
+                              <span class="material-symbols-outlined">close</span> Cancel
+                            </button>
+                          ` : '-'}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
         `;
       }
 
       else if (tab === 'my-events') {
+        if (!isOrganizer) {
+          showEmpty('tab-content', 'event_note', 'Participant view only', 'Organizer tools stay hidden until role changes.');
+          return;
+        }
+
         if (myEvents.length === 0) {
-          content.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📅</div>
-              <div class="empty-state-title">${Auth.isOrganizer() ? 'No events created yet' : 'Only organizers can create events'}</div>
-              ${Auth.isOrganizer() ? '<a href="/create-event.html" class="btn btn-primary mt-lg">Create Event</a>' : ''}
-            </div>
-          `;
+          showEmpty('tab-content', 'event_note', 'No created events yet', 'Click Create Event to host your first gathering.');
           return;
         }
 
@@ -202,14 +284,13 @@
       }
 
       else if (tab === 'organizations') {
+        if (!isOrganizer) {
+          showEmpty('tab-content', 'business', 'Participant view only', 'Organization records are visible to organizers.');
+          return;
+        }
+
         if (myOrgs.length === 0) {
-          content.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">🏢</div>
-              <div class="empty-state-title">No organizations</div>
-              <div class="empty-state-text">Organizations will appear here.</div>
-            </div>
-          `;
+          showEmpty('tab-content', 'business', 'No organizations found', 'Organizations will appear here.');
           return;
         }
 
@@ -217,25 +298,44 @@
           <div class="grid grid-3">
             ${myOrgs.map((o, i) => `
               <div class="card" id="org-card-${o._id}">
-                <div class="flex gap-md" style="align-items:center; margin-bottom:var(--space-md);">
-                  <div class="dash-stat-icon" style="background:${getGradient(i)}; color:white; border-radius:var(--radius-md); font-size:1.2rem; width:48px; height:48px;">
-                    🏢
+                <div class="flex items-center gap-md mb-md">
+                  <div class="dash-stat-icon" style="background:var(--secondary-container); color:var(--on-secondary-container); border-radius:var(--radius-md); font-size:1.2rem; width:48px; height:48px;">
+                    <span class="material-symbols-outlined">business</span>
                   </div>
                   <div>
-                    <h4>${o.name}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted);">Created ${formatDate(o.createdAt)}</p>
+                    <h4 style="margin:0;">${o.name}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Created ${formatDate(o.createdAt)}</p>
                   </div>
                 </div>
-                <p style="font-size:0.9rem;">${o.description || 'No description'}</p>
+                <p style="font-size:0.9rem;">${o.description || 'No description provided.'}</p>
               </div>
             `).join('')}
+          </div>
+        `;
+      }
+
+      else if (tab === 'recommendations') {
+        content.innerHTML = `
+          <div class="card">
+            <h3 class="mb-md">Recommended events</h3>
+            <p class="text-muted">Use browse page for discovery. This dashboard stays focused on your session and registrations.</p>
+            <a href="/events.html" class="btn btn-primary mt-md">Browse events</a>
+          </div>
+        `;
+      }
+
+      else if (tab === 'feedback') {
+        content.innerHTML = `
+          <div class="card">
+            <h3 class="mb-md">Feedback activity</h3>
+            <p class="text-muted">Leave reviews from event detail pages. Feedback list view can be added next if needed.</p>
           </div>
         `;
       }
     }
 
     async function cancelFromDash(eventId) {
-      if (!confirm('Cancel your registration?')) return;
+      if (!confirm('Are you sure you want to cancel your registration?')) return;
       try {
         await api(`/registrations/${eventId}/cancel`, { method: 'PATCH' });
         showToast('Registration cancelled', 'info');

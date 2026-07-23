@@ -3,107 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Create a new event on EventSphere.">
+  <meta name="description" content="Create and publish an event on EventSphere.">
   <title>Create Event – EventSphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <div class="page-wrapper" id="app">
+    <!-- Navbar -->
+    <div id="navbar-placeholder"></div>
+
     <main class="main-content">
-      <div class="container" style="max-width: 720px;">
-        <div class="section-header">
-          <h1 class="section-title">Create Event</h1>
+      <div class="container" style="max-width: 680px;">
+        <div class="section-head" style="margin-bottom:1rem;">
+          <div>
+            <div class="hero-kicker" style="color:var(--ink); border-color:var(--border); background:var(--slate-fill);">Organizer flow</div>
+            <h1 style="font-size: 1.9rem; margin-top:0.85rem; color:var(--ink);">Create Event</h1>
+            <p class="text-muted" style="font-size: 0.95rem;">Configure event basics, timing, logistics, and lifecycle status.</p>
+          </div>
         </div>
 
         <div class="card" id="create-event-card">
-          <form id="create-event-form" onsubmit="handleCreateEvent(event)">
-            <div class="form-group">
-              <label class="form-label" for="event-title">Event Title *</label>
-              <input class="form-input" type="text" id="event-title" placeholder="e.g. Tech Meetup 2026" required>
-            </div>
+          <form id="create-event-form" onsubmit="handleCreateEvent(event)" class="flex flex-col gap-lg">
+            
+            <!-- Section 1: Basic Details -->
+            <div>
+              <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Basic Details
+              </h3>
 
-            <div class="form-group">
-              <label class="form-label" for="event-description">Description</label>
-              <textarea class="form-textarea" id="event-description" placeholder="Describe your event..." rows="4"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="event-category">Category</label>
-              <select class="form-select" id="event-category">
-                <option value="">Select category</option>
-                <option value="Technology">Technology</option>
-                <option value="Business">Business</option>
-                <option value="Music">Music</option>
-                <option value="Sports">Sports</option>
-                <option value="Art">Art</option>
-                <option value="Education">Education</option>
-                <option value="Health">Health</option>
-                <option value="Social">Social</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="event-org">Organization *</label>
-              <select class="form-select" id="event-org" required>
-                <option value="">Loading organizations...</option>
-              </select>
-              <div style="margin-top:var(--space-sm);">
-                <button type="button" class="btn btn-ghost btn-sm" onclick="showNewOrgForm()" id="btn-new-org">+ Create New Organization</button>
-              </div>
-            </div>
-
-            <!-- Inline Org Creation -->
-            <div class="hidden" id="new-org-form" style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-lg); border:1px solid var(--border-color);">
-              <h4 class="mb-md">New Organization</h4>
               <div class="form-group">
-                <label class="form-label" for="new-org-name">Organization Name *</label>
-                <input class="form-input" type="text" id="new-org-name" placeholder="e.g. Tech Community">
+                <label class="form-label" for="event-title">Event Title *</label>
+                <input class="form-input" type="text" id="event-title" placeholder="e.g., Global Tech Summit 2026" required>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="new-org-desc">Description</label>
-                <input class="form-input" type="text" id="new-org-desc" placeholder="Brief description">
+                <label class="form-label" for="event-description">Description</label>
+                <textarea class="form-textarea" id="event-description" placeholder="Briefly describe what this event is about..." rows="4"></textarea>
               </div>
-              <div class="flex gap-sm">
-                <button type="button" class="btn btn-primary btn-sm" onclick="createOrg()" id="btn-save-org">Save Organization</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="hideNewOrgForm()" id="btn-cancel-org">Cancel</button>
+
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="event-category">Category</label>
+                  <select class="form-select" id="event-category">
+                    <option value="">Select Category</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Business">Business</option>
+                    <option value="Design">Design</option>
+                    <option value="Education">Education</option>
+                    <option value="Health">Health</option>
+                    <option value="Social">Social</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="event-org">Host Organization *</label>
+                  <select class="form-select" id="event-org" required>
+                    <option value="">Loading organizations...</option>
+                  </select>
+                  <div class="mt-xs">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="showNewOrgForm()" id="btn-new-org" style="padding-left:0;">
+                      <span class="material-symbols-outlined">add_business</span> Create New Organization
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inline Organization Creator Panel -->
+              <div class="hidden mb-md" id="new-org-form" style="background:var(--slate-fill); border-radius:var(--radius-lg); padding:1.25rem; border:1px solid var(--border);">
+                <h4 class="mb-md flex items-center gap-sm">
+                  <span class="material-symbols-outlined">domain_add</span> New Organization
+                </h4>
+                <div class="form-group">
+                  <label class="form-label" for="new-org-name">Organization Name *</label>
+                  <input class="form-input" type="text" id="new-org-name" placeholder="e.g. Tech Community Network">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="new-org-desc">Description</label>
+                  <input class="form-input" type="text" id="new-org-desc" placeholder="Short description of your organization">
+                </div>
+                <div class="flex gap-sm">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="createOrg()" id="btn-save-org">Save Organization</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="hideNewOrgForm()" id="btn-cancel-org">Cancel</button>
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg);">
-              <div class="form-group">
-                <label class="form-label" for="event-date">Event Date *</label>
-                <input class="form-input" type="datetime-local" id="event-date" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="event-deadline">Registration Deadline *</label>
-                <input class="form-input" type="datetime-local" id="event-deadline" required>
+            <!-- Section 2: Timing -->
+            <div>
+              <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Timing
+              </h3>
+
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="event-date">Date & Time *</label>
+                  <div class="input-icon-wrapper">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <input class="form-input" type="datetime-local" id="event-date" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="event-deadline">Registration Deadline *</label>
+                  <div class="input-icon-wrapper">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <input class="form-input" type="datetime-local" id="event-deadline" required>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:2fr 1fr; gap:var(--space-lg);">
-              <div class="form-group">
-                <label class="form-label" for="event-venue">Venue *</label>
-                <input class="form-input" type="text" id="event-venue" placeholder="e.g. Mumbai Convention Center" required>
+            <!-- Section 3: Logistics -->
+            <div>
+              <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Logistics
+              </h3>
+
+              <div class="grid grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="event-venue">Venue Address / Link *</label>
+                  <div class="input-icon-wrapper">
+                    <span class="material-symbols-outlined">map</span>
+                    <input class="form-input" type="text" id="event-venue" placeholder="Search venue or video link..." required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="event-capacity">Max Capacity *</label>
+                  <div class="input-icon-wrapper">
+                    <span class="material-symbols-outlined">groups</span>
+                    <input class="form-input" type="number" id="event-capacity" min="1" placeholder="e.g. 500" required>
+                  </div>
+                </div>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="event-capacity">Capacity *</label>
-                <input class="form-input" type="number" id="event-capacity" min="1" placeholder="100" required>
+                <label class="form-label" for="event-status">Lifecycle Status</label>
+                <select class="form-select" id="event-status">
+                  <option value="draft">Draft (Private preview)</option>
+                  <option value="published" selected>Published (Visible immediately)</option>
+                </select>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="event-status">Initial Status</label>
-              <select class="form-select" id="event-status">
-                <option value="draft">Draft (publish later)</option>
-                <option value="published">Published (visible immediately)</option>
-              </select>
+            <div class="flex gap-md pt-md" style="border-top:1px solid var(--border);">
+              <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-create-event">
+                <span class="material-symbols-outlined">publish</span> Publish Event
+              </button>
             </div>
 
-            <div class="flex gap-md mt-lg">
-              <button type="submit" class="btn btn-primary btn-lg" id="btn-create-event">Create Event</button>
-              <a href="/events.html" class="btn btn-ghost btn-lg" id="btn-back-events">Cancel</a>
-            </div>
           </form>
         </div>
       </div>
@@ -112,20 +161,19 @@
 
   <script src="/js/app.js"></script>
   <script>
-    if (!requireAuth()) { /* redirects */ }
-    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('create'));
+    if (!requireAuth()) { /* redirect */ }
+    document.getElementById('navbar-placeholder').innerHTML = renderNavbar('create');
     initNavbar();
 
-    // Load organizations
     async function loadOrgs() {
       try {
         const res = await api('/organizations');
         const orgs = res.data.orgs || [];
         const select = document.getElementById('event-org');
         if (orgs.length === 0) {
-          select.innerHTML = '<option value="">No organizations – create one below</option>';
+          select.innerHTML = '<option value="">No organization found – create one below</option>';
         } else {
-          select.innerHTML = '<option value="">Select organization</option>' +
+          select.innerHTML = '<option value="">Select Organization</option>' +
             orgs.map(o => `<option value="${o._id}">${o.name}</option>`).join('');
         }
       } catch (err) {
@@ -152,10 +200,9 @@
             description: document.getElementById('new-org-desc').value,
           }),
         });
-        showToast('Organization created!', 'success');
+        showToast('Organization created successfully!', 'success');
         hideNewOrgForm();
         await loadOrgs();
-        // Auto-select the new org
         document.getElementById('event-org').value = res.data.org._id;
       } catch (err) {
         showToast(err.message, 'error');
@@ -166,7 +213,7 @@
       e.preventDefault();
       const btn = document.getElementById('btn-create-event');
       btn.disabled = true;
-      btn.textContent = 'Creating...';
+      btn.innerHTML = '<span class="material-symbols-outlined">sync</span> Publishing...';
 
       try {
         const data = {
@@ -182,9 +229,9 @@
         };
 
         if (!data.orgId) {
-          showToast('Please select an organization', 'error');
+          showToast('Please select a host organization', 'error');
           btn.disabled = false;
-          btn.textContent = 'Create Event';
+          btn.innerHTML = '<span class="material-symbols-outlined">publish</span> Publish Event';
           return;
         }
 
@@ -193,12 +240,12 @@
           body: JSON.stringify(data),
         });
 
-        showToast('Event created successfully!', 'success');
-        setTimeout(() => window.location.href = `/event.html?id=${res.data.event._id}`, 500);
+        showToast('Event published successfully!', 'success');
+        setTimeout(() => window.location.href = `/event.html?id=${res.data.event._id}`, 400);
       } catch (err) {
         showToast(err.message, 'error');
         btn.disabled = false;
-        btn.textContent = 'Create Event';
+        btn.innerHTML = '<span class="material-symbols-outlined">publish</span> Publish Event';
       }
     }
 

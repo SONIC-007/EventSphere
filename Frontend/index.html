@@ -3,134 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="EventSphere – Discover, create, and manage community events effortlessly. Join vibrant communities and attend events that matter.">
-  <title>EventSphere – Community Event Management Platform</title>
+  <meta name="description" content="EventSphere - enterprise event operations with lifecycle, capacity, and role-aware control.">
+  <title>EventSphere - Enterprise Event Management Platform</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <div class="page-wrapper" id="app">
-    <!-- Navbar injected by JS -->
-    <main class="main-content">
-      <div class="container">
-        <!-- Hero -->
-        <section class="hero" id="hero-section">
-          <h1 class="hero-title">Discover Events<br>That Inspire</h1>
-          <p class="hero-subtitle">
-            Create, manage, and attend community events seamlessly. Connect with like-minded people and make every moment count.
-          </p>
-          <div class="hero-actions" id="hero-actions">
-            <a href="/events.html" class="btn btn-primary btn-lg" id="hero-browse">Browse Events</a>
-            <a href="/signup.html" class="btn btn-secondary btn-lg" id="hero-signup">Get Started Free</a>
-          </div>
-          <div class="stats-row" id="stats-row">
-            <div class="stat-item">
-              <div class="stat-number" id="stat-events">0</div>
-              <div class="stat-label">Events</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number" id="stat-orgs">0</div>
-              <div class="stat-label">Organizations</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number" id="stat-capacity">∞</div>
-              <div class="stat-label">Community Members</div>
-            </div>
-          </div>
-        </section>
+    <div id="navbar-placeholder"></div>
 
-        <!-- Features -->
-        <section style="padding: var(--space-3xl) 0;" id="features-section">
-          <h2 class="section-title text-center mb-lg">Why EventSphere?</h2>
-          <div class="grid grid-3" id="features-grid">
-            <div class="card" id="feature-discover" style="text-align:center;">
-              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🔍</div>
-              <h4>Discover Events</h4>
-              <p class="mt-sm" style="font-size:0.9rem;">Browse and find events that match your interests. Filter by category, date, and location.</p>
+    <main class="main-content landing-shell" style="padding-top:0;">
+      <section class="landing-hero">
+        <div class="container landing-grid">
+          <div class="landing-copy">
+            <div class="landing-kicker">EventSphere / operations console</div>
+            <h1 class="landing-title">Run events with structure, status, and no noise.</h1>
+            <p class="landing-subtitle">Swiss grid. Brutal edge. Real lifecycle rail. EventSphere keeps capacity, attendance, feedback, and org ops in one system.</p>
+
+            <div class="landing-actions" id="hero-actions">
+              <a href="/signup.html" class="btn btn-primary btn-lg" id="hero-start">Create account</a>
+              <a href="/events.html" class="btn btn-secondary btn-lg" id="hero-browse">Browse events</a>
             </div>
-            <div class="card" id="feature-organize" style="text-align:center;">
-              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🎯</div>
-              <h4>Organize Seamlessly</h4>
-              <p class="mt-sm" style="font-size:0.9rem;">Create events, manage registrations, track attendance, and collect feedback all in one place.</p>
-            </div>
-            <div class="card" id="feature-connect" style="text-align:center;">
-              <div style="font-size:2.5rem; margin-bottom:var(--space-md);">🤝</div>
-              <h4>Build Community</h4>
-              <p class="mt-sm" style="font-size:0.9rem;">Connect with organizations and communities. Engage through events and grow together.</p>
+
+            <div class="landing-metrics">
+              <div class="metric-box"><strong id="stat-events">0</strong><span>Published</span></div>
+              <div class="metric-box"><strong id="stat-orgs">0</strong><span>Organizations</span></div>
+              <div class="metric-box"><strong id="stat-capacity">0</strong><span>Registrations</span></div>
             </div>
           </div>
-        </section>
 
-        <!-- Upcoming Events Preview -->
-        <section style="padding: var(--space-2xl) 0;" id="upcoming-section">
-          <div class="section-header">
-            <h2 class="section-title">Upcoming Events</h2>
-            <a href="/events.html" class="btn btn-ghost" id="view-all-events">View All →</a>
+          <div class="landing-rail">
+            <div class="landing-rail-label">Live event loop</div>
+            <div class="vertical-carousel" id="hero-carousel"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-bento section-block">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Built for organizers, participants, and real operations.</h2>
+              <p class="section-subtitle">Role access, waitlists, feedback, organizations, and attendance. No fake backend promises.</p>
+            </div>
+          </div>
+
+          <div class="bento-grid">
+            <article class="bento-card bento-large">
+              <div class="bento-index">01</div>
+              <h3>Lifecycle rail</h3>
+              <p>Draft &rarr; published &rarr; completed. Cancelled branch stays visible.</p>
+            </article>
+            <article class="bento-card">
+              <div class="bento-index">02</div>
+              <h3>Role aware</h3>
+              <p>Participants, organizers, admins. Views change by role.</p>
+            </article>
+            <article class="bento-card">
+              <div class="bento-index">03</div>
+              <h3>Waitlist + capacity</h3>
+              <p>Filled seats, totals, and open slots stay visible.</p>
+            </article>
+            <article class="bento-card">
+              <div class="bento-index">04</div>
+              <h3>Feedback loop</h3>
+              <p>Ratings and comments attach to event detail.</p>
+            </article>
+            <article class="bento-card bento-wide">
+              <div class="bento-index">05</div>
+              <h3>Organization control</h3>
+              <p>Organizations, registrations, attendance, and event state. All in one shell.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block" id="upcoming-section">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Upcoming events</h2>
+              <p class="section-subtitle">Live feed from backend. Scroll rail stays on right.</p>
+            </div>
+            <a href="/events.html" class="btn btn-ghost" id="view-all-events">View all</a>
           </div>
           <div class="grid grid-3" id="upcoming-events">
-            <div class="loading-center"><div class="spinner"></div></div>
+            <div class="spinner-center" style="grid-column: 1/-1;"><div class="spinner"></div></div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
-
-    <!-- Footer -->
-    <footer style="border-top: 1px solid var(--border-light); padding: var(--space-xl) 0; text-align:center;">
-      <div class="container">
-        <p style="color: var(--text-muted); font-size:0.85rem;">
-          © 2026 EventSphere. Built with ❤️ for the community.
-        </p>
-      </div>
-    </footer>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
-    // Insert navbar
-    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar('home'));
+    document.getElementById('navbar-placeholder').innerHTML = renderNavbar('home');
     initNavbar();
 
-    // Update hero for logged-in users
     if (Auth.isLoggedIn()) {
-      const user = Auth.getUser();
+      window.location.replace('/dashboard.html');
+    }
+
+    const heroCarousel = document.getElementById('hero-carousel');
+    const carouselCards = [
+      { title: 'Draft', text: 'Build event structure first.', img: getSampleBanner(0) },
+      { title: 'Published', text: 'Open event to audience.', img: getSampleBanner(1) },
+      { title: 'Completed', text: 'Close loop with feedback.', img: getSampleBanner(2) },
+      { title: 'Cancelled', text: 'Interrupt branch stays explicit.', img: getSampleBanner(3) },
+    ];
+
+    if (heroCarousel) {
+      const loopItems = [...carouselCards, ...carouselCards];
+      heroCarousel.innerHTML = loopItems.map(card => `
+        <article class="vertical-card">
+          <div class="vertical-card-image" style="background-image:url('${card.img}')"></div>
+          <div class="vertical-card-body">
+            <div class="badge badge-amber" style="margin-bottom:0.45rem;">${card.title}</div>
+            <h3>${card.text}</h3>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    if (Auth.isLoggedIn()) {
+      const isOrg = Auth.isOrganizer();
       document.getElementById('hero-actions').innerHTML = `
-        <a href="/events.html" class="btn btn-primary btn-lg" id="hero-browse-auth">Browse Events</a>
-        ${Auth.isOrganizer() ? '<a href="/create-event.html" class="btn btn-secondary btn-lg" id="hero-create">Create Event</a>' : ''}
+        <a href="/dashboard.html" class="btn btn-primary btn-lg">Open dashboard</a>
+        ${isOrg ? `<a href="/create-event.html" class="btn btn-secondary btn-lg">Create event</a>` : ''}
       `;
     }
 
-    // Load stats & upcoming events
     async function loadHomePage() {
       try {
-        const [eventsRes, orgsRes] = await Promise.all([
-          api('/events?status=published&limit=6'),
-          api('/organizations'),
-        ]);
+        try {
+          const statsRes = await api('/events/stats');
+          if (statsRes.data) {
+            document.getElementById('stat-events').textContent = statsRes.data.totalEvents || 0;
+            document.getElementById('stat-orgs').textContent = statsRes.data.totalOrgs || 0;
+            document.getElementById('stat-capacity').textContent = statsRes.data.totalRegistrations || 0;
+          }
+        } catch {
+          document.getElementById('stat-events').textContent = '0';
+          document.getElementById('stat-orgs').textContent = '0';
+          document.getElementById('stat-capacity').textContent = '0';
+        }
 
-        // Stats
-        document.getElementById('stat-events').textContent = eventsRes.data.total || 0;
-        document.getElementById('stat-orgs').textContent = eventsRes.data.events?.length > 0 
-          ? orgsRes.data.orgs?.length || 0 
-          : 0;
-
-        // Upcoming events
+        const eventsRes = await api('/events?status=published&limit=3');
         const container = document.getElementById('upcoming-events');
-        if (eventsRes.data.events?.length > 0) {
-          container.innerHTML = eventsRes.data.events
-            .slice(0, 3)
-            .map((e, i) => renderEventCard(e, i))
-            .join('');
+
+        if (eventsRes.data?.events && eventsRes.data.events.length > 0) {
+          container.innerHTML = eventsRes.data.events.map((e, i) => renderEventCard(e, i)).join('');
         } else {
-          container.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
-              <div class="empty-state-icon">🎉</div>
-              <div class="empty-state-title">No events yet</div>
-              <div class="empty-state-text">Be the first to create an event!</div>
-              <a href="/create-event.html" class="btn btn-primary mt-lg">Create Event</a>
-            </div>
-          `;
+          showEmpty('upcoming-events', 'event_busy', 'No upcoming events yet', 'Be the first to host an event for your community.');
         }
       } catch (err) {
-        console.error(err);
+        showEmpty('upcoming-events', 'error', 'Unable to load events', err.message);
       }
     }
 

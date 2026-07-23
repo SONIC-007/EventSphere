@@ -1,19 +1,25 @@
-/* ============================================
-   EventSphere – API Client & Utilities
-   ============================================ */
+/* ==========================================================================
+   EventSphere - Core Client, Auth & UI Utilities
+   ========================================================================== */
 
 const API_BASE = '/api';
 
-// ── Auth Token Management ──
+// ── Auth Token & Session Management ──
 const Auth = {
   getToken: () => localStorage.getItem('es_access_token'),
   getRefresh: () => localStorage.getItem('es_refresh_token'),
-  getUser: () => JSON.parse(localStorage.getItem('es_user') || 'null'),
+  getUser: () => {
+    try {
+      return JSON.parse(localStorage.getItem('es_user') || 'null');
+    } catch {
+      return null;
+    }
+  },
 
   save(data) {
-    localStorage.setItem('es_access_token', data.accessToken);
-    localStorage.setItem('es_refresh_token', data.refreshToken);
-    localStorage.setItem('es_user', JSON.stringify(data.user));
+    if (data.accessToken) localStorage.setItem('es_access_token', data.accessToken);
+    if (data.refreshToken) localStorage.setItem('es_refresh_token', data.refreshToken);
+    if (data.user) localStorage.setItem('es_user', JSON.stringify(data.user));
   },
 
   clear() {
@@ -30,9 +36,14 @@ const Auth = {
     const u = this.getUser();
     return u && (u.role === 'organizer' || u.role === 'admin');
   },
+
+  isAdmin() {
+    const u = this.getUser();
+    return u && u.role === 'admin';
+  }
 };
 
-// ── API Fetch Wrapper ──
+// ── Fetch Wrapper ──
 async function api(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -62,17 +73,21 @@ function showToast(message, type = 'info') {
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  const icons = { success: '✓', error: '✕', info: 'ℹ' };
-  toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span> <span>${message}</span>`;
+  const icons = { success: 'check_circle', error: 'error', info: 'info' };
+  toast.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${message}</span>`;
   container.appendChild(toast);
 
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
-// ── Date Formatting ──
+// ── Date Formatters ──
 function formatDate(dateStr) {
+  if (!dateStr) return 'N/A';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-IN', {
+  return d.toLocaleDateString('en-US', {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -81,46 +96,134 @@ function formatDate(dateStr) {
 }
 
 function formatTime(dateStr) {
+  if (!dateStr) return '';
   const d = new Date(dateStr);
-  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDateTime(dateStr) {
+  if (!dateStr) return 'N/A';
   return `${formatDate(dateStr)} at ${formatTime(dateStr)}`;
 }
 
+function getMonthAbbr(dateStr) {
+  if (!dateStr) return 'OCT';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+}
+
+function getDayNum(dateStr) {
+  if (!dateStr) return '15';
+  return new Date(dateStr).getDate();
+}
+
 function timeUntil(dateStr) {
+  if (!dateStr) return '';
   const diff = new Date(dateStr) - new Date();
   if (diff < 0) return 'Past';
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   if (days > 30) return `${Math.floor(days / 30)} months`;
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
+  if (days > 0) return `${days}d left`;
   const hours = Math.floor(diff / (1000 * 60 * 60));
-  return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  return `${hours}h left`;
 }
 
-// ── Render Navbar ──
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderCapacityBar(filled = 0, total = 0) {
+  const percent = total > 0 ? Math.min(100, Math.round((filled / total) * 100)) : 0;
+  return `
+    <div class="capacity-bar" aria-hidden="true">
+      <span style="width:${percent}%"></span>
+    </div>
+    <div class="capacity-meta">${filled} / ${total}</div>
+  `;
+}
+
+function renderLifecycleRail(status, compact = true) {
+  const steps = ['draft', 'published', 'completed'];
+  const activeIndex = Math.max(0, steps.indexOf(status));
+  const cancelled = status === 'cancelled';
+
+  if (compact) {
+    return `
+      <div class="lifecycle-rail lifecycle-rail-compact lifecycle-${status || 'draft'}" title="${status || 'draft'}">
+        ${steps.map((step, index) => `<span class="rail-dot ${index <= activeIndex && !cancelled ? 'is-active' : ''}"></span>`).join('')}
+        ${cancelled ? '<span class="rail-cancelled">cancelled</span>' : ''}
+      </div>
+    `;
+  }
+
+  const labels = [
+    { key: 'draft', label: 'Draft' },
+    { key: 'published', label: 'Published' },
+    { key: 'completed', label: 'Completed' },
+  ];
+
+  return `
+    <div class="lifecycle-rail lifecycle-rail-full lifecycle-${status || 'draft'}">
+      ${labels.map((step, index) => `
+        <div class="rail-step ${index <= activeIndex && !cancelled ? 'is-active' : ''}">
+          <span class="rail-step-dot"></span>
+          <span class="rail-step-label">${step.label}</span>
+        </div>
+      `).join('')}
+      <div class="rail-step rail-step-cancelled ${cancelled ? 'is-active' : ''}">
+        <span class="rail-step-dot"></span>
+        <span class="rail-step-label">Cancelled</span>
+      </div>
+    </div>
+  `;
+}
+
+// ── Navbar Component ──
 function renderNavbar(activePage = '') {
   const user = Auth.getUser();
   const isOrg = Auth.isOrganizer();
+  const loggedIn = !!user;
+  const brandHref = loggedIn ? '/dashboard.html' : '/';
 
   return `
     <nav class="navbar" id="main-navbar">
       <div class="container">
-        <a href="/" class="navbar-brand" id="nav-brand">
-          <div class="brand-icon">⚡</div>
+        <a href="${brandHref}" class="navbar-brand" id="nav-brand">
+          <div class="brand-icon">
+            <span class="material-symbols-outlined">hub</span>
+          </div>
           EventSphere
         </a>
-        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">☰</button>
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
         <div class="navbar-nav" id="navbar-nav">
-          <a href="/" class="nav-link ${activePage === 'home' ? 'active' : ''}" id="nav-home">Home</a>
-          <a href="/events.html" class="nav-link ${activePage === 'events' ? 'active' : ''}" id="nav-events">Events</a>
-          ${user ? `
-            <a href="/dashboard.html" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" id="nav-dashboard">Dashboard</a>
-            ${isOrg ? `<a href="/create-event.html" class="nav-link ${activePage === 'create' ? 'active' : ''}" id="nav-create">Create Event</a>` : ''}
+          ${loggedIn ? '' : `<a href="/" class="nav-link ${activePage === 'home' ? 'active' : ''}" id="nav-home">
+            <span class="material-symbols-outlined">home</span> Home
+          </a>`}
+          <a href="/events.html" class="nav-link ${activePage === 'events' ? 'active' : ''}" id="nav-events">
+            <span class="material-symbols-outlined">event</span> Browse Events
+          </a>
+          ${loggedIn ? `
+            <a href="/dashboard.html" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" id="nav-dashboard">
+              <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            ${isOrg ? `
+              <a href="/create-event.html" class="nav-link ${activePage === 'create' ? 'active' : ''}" id="nav-create">
+                <span class="material-symbols-outlined">add_circle</span> Create Event
+              </a>
+            ` : ''}
             <div class="nav-user">
-              <div class="nav-avatar" id="nav-avatar">${user.name.charAt(0).toUpperCase()}</div>
-              <button class="nav-link" id="nav-logout" onclick="logout()">Logout</button>
+              <div class="nav-avatar" id="nav-avatar" title="${user.name}">
+                ${user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <button class="btn btn-ghost btn-sm" id="nav-logout" onclick="logout()">
+                <span class="material-symbols-outlined">logout</span> Log Out
+              </button>
             </div>
           ` : `
             <a href="/login.html" class="btn btn-ghost ${activePage === 'login' ? 'active' : ''}" id="nav-login">Log In</a>
@@ -138,91 +241,86 @@ function initNavbar() {
   if (toggle && nav) {
     toggle.addEventListener('click', () => nav.classList.toggle('open'));
   }
+
+  const navbar = document.getElementById('main-navbar');
+  if (!navbar) return;
+
+  const syncNav = () => {
+    navbar.classList.toggle('is-scrolled', window.scrollY > 12);
+  };
+
+  syncNav();
+  window.addEventListener('scroll', syncNav, { passive: true });
 }
 
-// ── Logout ──
 function logout() {
   Auth.clear();
-  window.location.href = '/login.html';
+  showToast('Logged out successfully', 'info');
+  setTimeout(() => window.location.href = '/', 400);
 }
 
-// ── Loading State ──
-function showLoading(containerId) {
-  const el = document.getElementById(containerId);
-  if (el) el.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-}
-
-function showEmpty(containerId, icon = '📭', title = 'Nothing here yet', text = '') {
-  const el = document.getElementById(containerId);
-  if (el) {
-    el.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">${icon}</div>
-        <div class="empty-state-title">${title}</div>
-        ${text ? `<div class="empty-state-text">${text}</div>` : ''}
-      </div>
-    `;
-  }
-}
-
-// ── Generate gradient colors for event cards ──
-const gradients = [
-  'linear-gradient(135deg, #6C63FF, #FF6B9D)',
-  'linear-gradient(135deg, #4ECDC4, #556270)',
-  'linear-gradient(135deg, #FF6B9D, #FFB347)',
-  'linear-gradient(135deg, #2DD4A8, #6C63FF)',
-  'linear-gradient(135deg, #A855F7, #EC4899)',
-  'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-  'linear-gradient(135deg, #F59E0B, #EF4444)',
-  'linear-gradient(135deg, #10B981, #3B82F6)',
+// ── Sample Banner Image Stock ──
+const sampleBanners = [
+  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80',
 ];
 
-function getGradient(index) {
-  return gradients[index % gradients.length];
+function getSampleBanner(index) {
+  return sampleBanners[index % sampleBanners.length];
 }
 
-// ── Status badge helper ──
+// ── Status Badges ──
 function statusBadge(status) {
   const map = {
-    draft: 'badge-warning',
-    published: 'badge-success',
-    completed: 'badge-info',
-    cancelled: 'badge-danger',
-    registered: 'badge-success',
-    waitlisted: 'badge-warning',
-    attended: 'badge-primary',
+    draft: 'badge-slate',
+    published: 'badge-amber',
+    completed: 'badge-moss',
+    cancelled: 'badge-rust',
+    registered: 'badge-moss',
+    waitlisted: 'badge-amber',
+    attended: 'badge-ink',
   };
-  return `<span class="badge ${map[status] || 'badge-primary'}">${status}</span>`;
+  const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+  return `<span class="badge ${map[status] || 'badge-primary'}">${label}</span>`;
 }
 
-// ── Render Event Card ──
+// ── Event Card Component (Sample Inspired) ──
 function renderEventCard(event, index = 0) {
-  const orgName = event.orgId?.name || 'Unknown Org';
+  const orgName = event.orgId?.name || 'Organization';
+  const bannerImg = getSampleBanner(index);
+  const filledSeats = event.registeredCount ?? event.currentRegistrations ?? 0;
+  const capacity = event.capacity ?? 0;
+
   return `
     <div class="event-card" onclick="window.location.href='/event.html?id=${event._id}'" id="event-card-${event._id}">
-      <div class="event-card-banner" style="background: ${getGradient(index)}">
-        ${event.category ? `<div class="event-card-category"><span class="badge badge-primary">${event.category}</span></div>` : ''}
-        <div class="event-card-status">${statusBadge(event.status)}</div>
+      <div class="event-card-banner" style="background-image: linear-gradient(180deg, rgba(20,33,61,0.08), rgba(20,33,61,0.72)), url('${bannerImg}');">
+        <div>${event.category ? `<span class="badge badge-secondary">${escapeHtml(event.category)}</span>` : ''}</div>
+        <div>${renderLifecycleRail(event.status, true)}</div>
       </div>
       <div class="event-card-body">
         <h4 class="event-card-title">${event.title}</h4>
-        <p style="font-size:0.85rem; color: var(--text-muted); margin-top:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
-          ${event.description || 'No description'}
-        </p>
+        <p class="event-card-desc">${event.description || 'No description provided.'}</p>
         <div class="event-card-meta">
           <div class="event-card-meta-item">
-            <span class="icon">📅</span> ${formatDate(event.date)}
+            <span class="material-symbols-outlined">calendar_today</span> ${formatDate(event.date)}
           </div>
           <div class="event-card-meta-item">
-            <span class="icon">📍</span> ${event.venue}
+            <span class="material-symbols-outlined">location_on</span> ${event.venue}
           </div>
           <div class="event-card-meta-item">
-            <span class="icon">👥</span> Capacity: ${event.capacity}
+            <span class="material-symbols-outlined">group</span> Capacity: ${event.capacity}
           </div>
+        </div>
+        <div class="capacity-shell">
+          ${renderCapacityBar(filledSeats, capacity)}
         </div>
       </div>
       <div class="event-card-footer">
-        <span class="event-card-org">🏢 ${orgName}</span>
+        <span style="display:flex; align-items:center; gap:0.3rem;"><span class="material-symbols-outlined" style="font-size:16px;">business</span> ${orgName}</span>
         <span class="badge badge-info">${timeUntil(event.date)}</span>
       </div>
     </div>
@@ -248,12 +346,31 @@ function setRating(value, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.dataset.rating = value;
-  container.querySelectorAll('.star').forEach((star) => {
-    star.classList.toggle('filled', parseInt(star.dataset.value) <= value);
+  container.querySelectorAll('.star').forEach((star, idx) => {
+    star.classList.toggle('filled', idx + 1 <= value);
   });
 }
 
-// ── Require Auth Guard ──
+function showLoading(containerId) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+}
+
+function showEmpty(containerId, icon = 'inbox', title = 'No items found', text = '') {
+  const el = document.getElementById(containerId);
+  if (el) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <span class="material-symbols-outlined" style="font-size:32px;">${icon}</span>
+        </div>
+        <div class="empty-state-title">${title}</div>
+        ${text ? `<div class="empty-state-text">${text}</div>` : ''}
+      </div>
+    `;
+  }
+}
+
 function requireAuth() {
   if (!Auth.isLoggedIn()) {
     window.location.href = '/login.html';

@@ -6,6 +6,7 @@ const { restrictTo } = require('../middleware/rbac');
 const {
   createEvent,
   getEvents,
+  getEventStats,
   getEventById,
   updateEvent,
   deleteEvent,
@@ -14,6 +15,7 @@ const {
 const router = express.Router();
 
 router.get('/', getEvents); // public
+router.get('/stats', getEventStats); // public stats
 router.get('/:id', getEventById); // public
 
 router.post(

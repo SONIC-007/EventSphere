@@ -3,49 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View event details, register, and leave feedback on EventSphere.">
+  <meta name="description" content="View event details, agenda schedule, register, and review on EventSphere.">
   <title>Event Details – EventSphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <div class="page-wrapper" id="app">
-    <main class="main-content">
-      <div class="container" id="event-detail-container">
-        <div class="loading-center"><div class="spinner"></div></div>
+    <!-- Navbar -->
+    <div id="navbar-placeholder"></div>
+
+    <main class="main-content" style="padding-top:0;">
+      <div id="event-detail-container">
+        <div class="spinner-center"><div class="spinner"></div></div>
       </div>
     </main>
   </div>
 
-  <!-- Feedback Modal -->
+  <!-- Feedback Review Modal -->
   <div class="modal-overlay" id="feedback-modal">
-    <div class="modal">
+    <div class="modal-card">
       <div class="modal-header">
-        <h3>Leave Feedback</h3>
+        <h3>Submit Community Review</h3>
         <button class="modal-close" onclick="closeFeedbackModal()" id="feedback-modal-close">✕</button>
       </div>
       <form onsubmit="handleFeedback(event)" id="feedback-form">
         <div class="form-group text-center">
           <label class="form-label">Rating</label>
-          <div id="feedback-rating" class="star-rating" data-rating="0" style="font-size:2rem; justify-content:center;">
-            <span class="star" data-value="1" onclick="setRating(1,'feedback-rating')" style="font-size:2rem;">★</span>
-            <span class="star" data-value="2" onclick="setRating(2,'feedback-rating')" style="font-size:2rem;">★</span>
-            <span class="star" data-value="3" onclick="setRating(3,'feedback-rating')" style="font-size:2rem;">★</span>
-            <span class="star" data-value="4" onclick="setRating(4,'feedback-rating')" style="font-size:2rem;">★</span>
-            <span class="star" data-value="5" onclick="setRating(5,'feedback-rating')" style="font-size:2rem;">★</span>
+          <div id="feedback-rating" class="star-rating" data-rating="0" style="font-size:2rem; justify-content:center; margin-top:0.5rem;">
+            <span class="star" data-value="1" onclick="setRating(1,'feedback-rating')">★</span>
+            <span class="star" data-value="2" onclick="setRating(2,'feedback-rating')">★</span>
+            <span class="star" data-value="3" onclick="setRating(3,'feedback-rating')">★</span>
+            <span class="star" data-value="4" onclick="setRating(4,'feedback-rating')">★</span>
+            <span class="star" data-value="5" onclick="setRating(5,'feedback-rating')">★</span>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="feedback-comment">Comment (optional)</label>
-          <textarea class="form-textarea" id="feedback-comment" placeholder="Share your experience..." maxlength="1000"></textarea>
+          <label class="form-label" for="feedback-comment">Review / Comments</label>
+          <textarea class="form-textarea" id="feedback-comment" placeholder="Share your experience attending this event..." maxlength="1000"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary btn-block" id="feedback-submit">Submit Feedback</button>
+        <button type="submit" class="btn btn-primary btn-block" id="feedback-submit">Submit Review</button>
       </form>
     </div>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
-    document.getElementById('app').insertAdjacentHTML('afterbegin', renderNavbar(''));
+    document.getElementById('navbar-placeholder').innerHTML = renderNavbar('');
     initNavbar();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -54,8 +57,7 @@
 
     async function loadEventDetail() {
       if (!eventId) {
-        document.getElementById('event-detail-container').innerHTML =
-          '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Event not found</div></div>';
+        showEmpty('event-detail-container', 'error', 'Event not found', 'Invalid event ID.');
         return;
       }
 
@@ -66,9 +68,8 @@
         document.title = `${e.title} – EventSphere`;
 
         const user = Auth.getUser();
-        const isOwner = user && (String(e.createdBy?._id) === String(user.id) || user.role === 'admin');
+        const isOwner = user && (String(e.createdBy?._id || e.createdBy) === String(user.id) || user.role === 'admin');
         const deadlinePassed = new Date(e.registrationDeadline) < new Date();
-        const isPast = new Date(e.date) < new Date();
 
         // Load feedback
         let feedbackHTML = '';
@@ -77,141 +78,152 @@
           const feedbacks = fbRes.data.feedbacks || fbRes.data || [];
           if (Array.isArray(feedbacks) && feedbacks.length > 0) {
             feedbackHTML = feedbacks.map(fb => `
-              <div style="padding: var(--space-md) 0; border-bottom: 1px solid var(--border-light);">
-                <div class="flex-between">
+              <div style="padding: 1rem 0; border-bottom: 1px solid var(--outline-variant);">
+                <div class="flex items-center justify-between">
                   ${renderStars(fb.rating)}
-                  <span style="font-size:0.75rem; color:var(--text-muted);">${formatDate(fb.createdAt)}</span>
+                  <span style="font-size:0.8rem; color:var(--text-muted);">${formatDate(fb.createdAt)}</span>
                 </div>
-                ${fb.comment ? `<p style="margin-top:var(--space-sm); font-size:0.9rem;">${fb.comment}</p>` : ''}
+                ${fb.comment ? `<p class="mt-xs" style="font-size:0.9rem; color:var(--on-surface);">${fb.comment}</p>` : ''}
               </div>
             `).join('');
           } else {
-            feedbackHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No feedback yet.</p>';
+            feedbackHTML = '<p class="text-muted" style="font-size:0.9rem;">No reviews submitted yet.</p>';
           }
-        } catch { feedbackHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No feedback yet.</p>'; }
+        } catch { feedbackHTML = '<p class="text-muted" style="font-size:0.9rem;">No reviews submitted yet.</p>'; }
 
         document.getElementById('event-detail-container').innerHTML = `
-          <!-- Banner -->
-          <div class="event-detail-banner" style="background: ${getGradient(e.title.length)}">
-            <div style="position:relative; z-index:1;">
-              <div class="flex gap-sm mb-md">
-                ${statusBadge(e.status)}
-                ${e.category ? `<span class="badge badge-primary">${e.category}</span>` : ''}
-              </div>
-              <h1 style="font-size:2rem; color:white;">${e.title}</h1>
-              <p style="color:rgba(255,255,255,0.8); margin-top:var(--space-sm); font-size:0.95rem;">
-                by ${e.orgId?.name || 'Unknown Organization'}
-              </p>
-            </div>
-          </div>
-
-          <div class="event-detail-content">
-            <!-- Main Content -->
-            <div>
-              <div class="card" style="margin-bottom:var(--space-xl);">
-                <h3 class="mb-md">About This Event</h3>
-                <p style="line-height:1.8; font-size:0.95rem;">${e.description || 'No description provided.'}</p>
-              </div>
-
-              ${isOwner ? `
-              <div class="card" style="margin-bottom:var(--space-xl);" id="manage-section">
-                <h3 class="mb-md">Manage Event</h3>
-                <div class="flex gap-md" style="flex-wrap:wrap;">
-                  ${e.status === 'draft' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('published')" id="btn-publish">📢 Publish</button>` : ''}
-                  ${e.status === 'published' ? `<button class="btn btn-primary btn-sm" onclick="updateStatus('completed')" id="btn-complete">✅ Mark Completed</button>` : ''}
-                  ${e.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="updateStatus('cancelled')" id="btn-cancel">✕ Cancel Event</button>` : ''}
-                  <button class="btn btn-secondary btn-sm" onclick="viewRegistrations()" id="btn-registrations">👥 View Registrations</button>
+          <section class="hero-shell" style="padding:3.5rem 0 2rem;">
+            <div class="container hero-grid" style="grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr); align-items:start;">
+              <div>
+                ${renderLifecycleRail(e.status, false)}
+                <h1 class="hero-title" style="font-size: clamp(2.2rem, 4vw, 3.4rem); margin-top:1rem;">${e.title}</h1>
+                <p class="hero-copy">${e.description || 'No detailed description provided.'}</p>
+                <div class="hero-actions">
+                  <div class="stat-tile"><strong>${formatDateTime(e.date)}</strong><span>Event time</span></div>
+                  <div class="stat-tile"><strong>${formatDate(e.registrationDeadline)}</strong><span>Deadline</span></div>
+                  <div class="stat-tile"><strong>${e.venue}</strong><span>Venue</span></div>
                 </div>
               </div>
-              ` : ''}
-
-              <!-- Registrations Table (for organizers) -->
-              <div id="registrations-section" class="hidden">
-                <div class="card" style="margin-bottom:var(--space-xl);">
-                  <h3 class="mb-md">Registrations</h3>
-                  <div id="registrations-content">
-                    <div class="loading-center"><div class="spinner"></div></div>
-                  </div>
+              <div class="card" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.14); color:#fff;">
+                <div class="badge badge-amber" style="margin-bottom:0.75rem;">${e.category || 'General'}</div>
+                <h3 style="color:#fff; margin-bottom:0.5rem;">Registration</h3>
+                <p style="color:rgba(255,255,255,0.75);">Registration deadline and event status drive actions below.</p>
+                <div class="mt-md" id="registration-actions">
+                  ${Auth.isLoggedIn() && !isOwner && e.status === 'published' ? `
+                    ${!deadlinePassed ? `
+                      <button class="btn btn-primary btn-lg btn-block" onclick="registerForEvent()" id="btn-register">
+                        Join event <span class="material-symbols-outlined">arrow_forward</span>
+                      </button>
+                    ` : `
+                      <button class="btn btn-secondary btn-lg btn-block" disabled>Registration closed</button>
+                    `}
+                    <button class="btn btn-ghost mt-sm" onclick="cancelRegistration()" id="btn-cancel-reg" style="display:none;">Cancel registration</button>
+                  ` : !Auth.isLoggedIn() ? `
+                    <a href="/login.html" class="btn btn-primary btn-lg btn-block" id="btn-login-to-register">Log in to register</a>
+                  ` : ''}
                 </div>
-              </div>
-
-              <!-- Feedback Section -->
-              <div class="card" id="feedback-section">
-                <div class="flex-between mb-md">
-                  <h3>Feedback & Reviews</h3>
-                  ${Auth.isLoggedIn() ? `<button class="btn btn-secondary btn-sm" onclick="openFeedbackModal()" id="btn-leave-feedback">⭐ Leave Feedback</button>` : ''}
-                </div>
-                <div id="feedback-list">${feedbackHTML}</div>
               </div>
             </div>
+          </section>
 
-            <!-- Sidebar -->
-            <div class="event-detail-sidebar">
-              <div class="sidebar-card" style="margin-bottom:var(--space-lg);">
-                <div class="info-list">
-                  <div class="info-item">
-                    <div class="info-icon">📅</div>
-                    <div>
-                      <div class="info-label">Date & Time</div>
-                      <div class="info-value">${formatDateTime(e.date)}</div>
+          <div class="container" style="padding-top:1.75rem;">
+            <div class="grid" style="grid-template-columns: 1fr 340px; gap:1.5rem;">
+              
+              <!-- Left Main Column -->
+              <div class="flex flex-col gap-xl">
+                
+                <!-- About Section -->
+                <div class="card">
+                  <h3 class="flex items-center gap-sm mb-md" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+                    <span class="material-symbols-outlined" style="color:var(--primary);">info</span> About the Event
+                  </h3>
+                  <p style="font-size:1rem; line-height:1.7; color:var(--text);">${e.description || 'No detailed description provided.'}</p>
+                </div>
+
+                <div class="card">
+                  <h3 class="flex items-center gap-sm mb-md" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+                    <span class="material-symbols-outlined" style="color:var(--primary);">schedule</span> Main Agenda Schedule
+                  </h3>
+                  <div class="flex flex-col gap-md">
+                    <div class="card" style="padding:1.25rem;">
+                      <div class="flex items-center gap-md">
+                        <div style="background:var(--primary-container); color:var(--primary); padding:0.6rem 1rem; border-radius:var(--radius-md); text-align:center; min-width:85px;">
+                          <span style="font-size:0.75rem; font-weight:800; display:block;">SESSION</span>
+                          <span style="font-weight:700; font-size:0.95rem;">${formatTime(e.date)}</span>
+                        </div>
+                        <div>
+                          <h4 style="margin-bottom:0.25rem;">${e.title} - Main Session</h4>
+                          <p style="font-size:0.875rem;">Opening Keynote & Strategic Transformations in ${e.category || 'Technology'}.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div class="info-item">
-                    <div class="info-icon">📍</div>
-                    <div>
-                      <div class="info-label">Venue</div>
-                      <div class="info-value">${e.venue}</div>
-                    </div>
+                </div>
+
+                <!-- Organizer Actions Panel -->
+                ${isOwner ? `
+                <div class="card">
+                  <h3 class="mb-md flex items-center gap-sm">
+                    <span class="material-symbols-outlined" style="color:var(--primary);">admin_panel_settings</span> Host Control Actions
+                  </h3>
+                  <div class="flex gap-sm" style="flex-wrap:wrap;">
+                    ${e.status === 'draft' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('published')">Publish Event</button>` : ''}
+                    ${e.status === 'published' ? `<button class="btn btn-primary btn-sm" onclick="updateStatus('completed')">Mark Completed</button>` : ''}
+                    ${e.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="updateStatus('cancelled')">Cancel Event</button>` : ''}
+                    <button class="btn btn-secondary btn-sm" onclick="viewRegistrations()">View Registered Attendees</button>
                   </div>
-                  <div class="info-item">
-                    <div class="info-icon">👥</div>
-                    <div>
-                      <div class="info-label">Capacity</div>
-                      <div class="info-value">${e.capacity} attendees</div>
-                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Registrations Container -->
+                <div id="registrations-section" class="hidden">
+                  <div class="card">
+                    <h3 class="mb-md">Registered Attendees</h3>
+                    <div id="registrations-content"><div class="spinner-center"><div class="spinner"></div></div></div>
                   </div>
-                  <div class="info-item">
-                    <div class="info-icon">⏰</div>
-                    <div>
-                      <div class="info-label">Registration Deadline</div>
-                      <div class="info-value">${formatDateTime(e.registrationDeadline)}</div>
-                      ${deadlinePassed ? '<span class="badge badge-danger mt-sm">Closed</span>' : `<span class="badge badge-success mt-sm">${timeUntil(e.registrationDeadline)} left</span>`}
-                    </div>
+                </div>
+
+                <!-- Feedback & Reviews -->
+                <div class="card">
+                  <div class="flex items-center justify-between mb-md" style="border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+                    <h3 class="flex items-center gap-sm" style="margin:0;">
+                      <span class="material-symbols-outlined" style="color:var(--warning);">star</span> Community Reviews
+                    </h3>
+                    ${Auth.isLoggedIn() ? `
+                      <button class="btn btn-secondary btn-sm" onclick="openFeedbackModal()">Leave Review</button>
+                    ` : ''}
                   </div>
-                  <div class="info-item">
-                    <div class="info-icon">👤</div>
-                    <div>
-                      <div class="info-label">Organized By</div>
-                      <div class="info-value">${e.createdBy?.name || 'Unknown'}</div>
-                    </div>
+                  <div id="feedback-list">${feedbackHTML}</div>
+                </div>
+
+              </div>
+
+              <!-- Right Column (Sidebar Cards) -->
+              <div class="flex flex-col gap-lg">
+                <!-- Host Card (Sample Style) -->
+                <div class="card text-center" style="padding:2rem 1.5rem;">
+                  <div style="width:64px; height:64px; border-radius:var(--radius-lg); background:var(--primary-container); color:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+                    <span class="material-symbols-outlined" style="font-size:32px;">corporate_fare</span>
+                  </div>
+                  <h4 style="margin-bottom:0.3rem;">Hosted by ${e.orgId?.name || 'Organization'}</h4>
+                  <p style="font-size:0.85rem; margin-bottom:1rem;">Delivering community events & digital experiences.</p>
+                  <div style="font-size:0.85rem; color:var(--on-surface-variant); text-align:left; border-top:1px solid var(--outline-variant); padding-top:1rem;" class="flex flex-col gap-xs">
+                    <div><strong>Host Name:</strong> ${e.createdBy?.name || 'Organizer'}</div>
+                    <div><strong>Max Capacity:</strong> ${e.capacity} Attendees</div>
+                    <div><strong>Venue:</strong> ${e.venue}</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Register / Cancel Button -->
-              ${Auth.isLoggedIn() && !isOwner && e.status === 'published' ? `
-                <div id="registration-actions">
-                  ${!deadlinePassed ?
-                    `<button class="btn btn-primary btn-block btn-lg" onclick="registerForEvent()" id="btn-register">🎟️ Register Now</button>` :
-                    `<button class="btn btn-secondary btn-block btn-lg" disabled>Registration Closed</button>`
-                  }
-                  <button class="btn btn-ghost btn-block mt-sm" onclick="cancelRegistration()" id="btn-cancel-reg" style="display:none;">Cancel Registration</button>
-                </div>
-              ` : !Auth.isLoggedIn() ? `
-                <a href="/login.html" class="btn btn-primary btn-block btn-lg" id="btn-login-to-register">Log In to Register</a>
-              ` : ''}
             </div>
           </div>
         `;
 
-        // Check if user is already registered
         if (Auth.isLoggedIn() && !isOwner) {
           checkRegistrationStatus();
         }
-
       } catch (err) {
-        document.getElementById('event-detail-container').innerHTML =
-          `<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-title">${err.message}</div></div>`;
+        showEmpty('event-detail-container', 'error', 'Error loading event', err.message);
       }
     }
 
@@ -224,7 +236,7 @@
           const regBtn = document.getElementById('btn-register');
           const cancelBtn = document.getElementById('btn-cancel-reg');
           if (regBtn) {
-            regBtn.textContent = myReg.status === 'waitlisted' ? '⏳ Waitlisted' : '✅ Registered';
+            regBtn.innerHTML = myReg.status === 'waitlisted' ? 'Waitlisted' : 'Registered ✓';
             regBtn.disabled = true;
             regBtn.classList.remove('btn-primary');
             regBtn.classList.add('btn-success');
@@ -238,7 +250,7 @@
       if (!requireAuth()) return;
       try {
         const res = await api(`/registrations/${eventId}/register`, { method: 'POST' });
-        showToast(res.message, 'success');
+        showToast(res.message || 'Registered successfully!', 'success');
         loadEventDetail();
       } catch (err) {
         showToast(err.message, 'error');
@@ -257,13 +269,13 @@
     }
 
     async function updateStatus(status) {
-      if (!confirm(`Change event status to "${status}"?`)) return;
+      if (!confirm(`Update status to ${status}?`)) return;
       try {
         await api(`/events/${eventId}`, {
           method: 'PATCH',
           body: JSON.stringify({ status }),
         });
-        showToast(`Event ${status}!`, 'success');
+        showToast(`Event status updated to ${status}!`, 'success');
         loadEventDetail();
       } catch (err) {
         showToast(err.message, 'error');
@@ -278,30 +290,29 @@
           const res = await api(`/registrations/${eventId}`);
           const regs = res.data.registrations || [];
           if (regs.length === 0) {
-            document.getElementById('registrations-content').innerHTML =
-              '<p style="color:var(--text-muted);">No registrations yet.</p>';
+            document.getElementById('registrations-content').innerHTML = '<p class="text-muted">No registrations yet.</p>';
             return;
           }
           document.getElementById('registrations-content').innerHTML = `
-            <div class="table-wrapper">
+            <div class="table-responsive">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>User</th>
+                    <th>Attendee</th>
                     <th>Status</th>
-                    <th>Registered</th>
+                    <th>Registered Date</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${regs.map(r => `
                     <tr>
-                      <td>${r.userId?.name || r.userId || 'Unknown'}</td>
+                      <td style="font-weight:600;">${r.userId?.name || 'User'} (${r.userId?.email || ''})</td>
                       <td>${statusBadge(r.status)}</td>
                       <td>${formatDate(r.createdAt)}</td>
                       <td>
                         ${r.status === 'registered' ?
-                          `<button class="btn btn-success btn-sm" onclick="markAttendance('${r.userId?._id || r.userId}')">✓ Attended</button>` : 
+                          `<button class="btn btn-success btn-sm" onclick="markAttendance('${r.userId?._id || r.userId}')">Mark Attended</button>` : 
                           r.status === 'attended' ? '<span class="badge badge-success">Attended</span>' : '-'
                         }
                       </td>
@@ -312,8 +323,7 @@
             </div>
           `;
         } catch (err) {
-          document.getElementById('registrations-content').innerHTML =
-            `<p style="color:var(--danger);">${err.message}</p>`;
+          document.getElementById('registrations-content').innerHTML = `<p style="color:var(--error);">${err.message}</p>`;
         }
       }
     }
@@ -321,8 +331,8 @@
     async function markAttendance(userId) {
       try {
         await api(`/registrations/${eventId}/attendance/${userId}`, { method: 'PATCH' });
-        showToast('Attendance marked!', 'success');
-        viewRegistrations(); // refresh
+        showToast('Attendance recorded!', 'success');
+        viewRegistrations();
       } catch (err) {
         showToast(err.message, 'error');
       }
@@ -339,7 +349,7 @@
       e.preventDefault();
       const rating = parseInt(document.getElementById('feedback-rating').dataset.rating);
       if (!rating || rating < 1) {
-        showToast('Please select a rating', 'error');
+        showToast('Please select a star rating', 'error');
         return;
       }
       try {
@@ -350,7 +360,7 @@
             comment: document.getElementById('feedback-comment').value,
           }),
         });
-        showToast('Feedback submitted!', 'success');
+        showToast('Thank you for your feedback!', 'success');
         closeFeedbackModal();
         loadEventDetail();
       } catch (err) {

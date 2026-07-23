@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const Organization = require('../models/Organization');
+const Registration = require('../models/Registration');
 const { AppError } = require('../middleware/errorHandler');
 
 const createEvent = async (data, userId) => {
@@ -16,6 +17,14 @@ const getEvents = async (filters) => {
   if (filters.status) query.status = filters.status;
   else query.status = 'published'; // public browsing defaults to published only
   if (filters.orgId) query.orgId = filters.orgId;
+  if (filters.createdBy) query.createdBy = filters.createdBy;
+  if (filters.search) {
+    query.$or = [
+      { title: { $regex: filters.search, $options: 'i' } },
+      { description: { $regex: filters.search, $options: 'i' } },
+      { venue: { $regex: filters.search, $options: 'i' } },
+    ];
+  }
 
   const page = parseInt(filters.page) || 1;
   const limit = parseInt(filters.limit) || 10;
@@ -27,6 +36,15 @@ const getEvents = async (filters) => {
   ]);
 
   return { events, total, page, pages: Math.ceil(total / limit) };
+};
+
+const getEventStats = async () => {
+  const [totalEvents, totalOrgs, totalRegistrations] = await Promise.all([
+    Event.countDocuments({ status: 'published' }),
+    Organization.countDocuments(),
+    Registration.countDocuments({ status: { $ne: 'cancelled' } }),
+  ]);
+  return { totalEvents, totalOrgs, totalRegistrations };
 };
 
 const getEventById = async (id) => {
@@ -60,4 +78,5 @@ const deleteEvent = async (id, requestingUser) => {
   await event.deleteOne();
 };
 
-module.exports = { createEvent, getEvents, getEventById, updateEvent, deleteEvent };
+module.exports = { createEvent, getEvents, getEventStats, getEventById, updateEvent, deleteEvent };
+
